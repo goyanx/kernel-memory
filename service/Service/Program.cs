@@ -308,6 +308,40 @@ if (config.Service.RunWebService)
         .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
         .Produces<ProblemDetails>(StatusCodes.Status403Forbidden);
 
+    // upsert endpoint
+    app.MapPost("/upsert",
+            async Task<IResult> (
+                Upsert upsert,
+                IKernelMemory service,
+                ILogger<Program> log,
+                CancellationToken cancellationToken) =>
+            {
+                log.LogTrace("New upsert request");
+                string docId = await service.ImportTextAsync(text: upsert.Text,
+                    documentId: upsert.DocumentId,
+                    index: upsert.Index,
+                    tags: upsert.Tags,
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (docId == null)
+                {
+                    return Results.Problem(detail: "Document not found", statusCode: 404);
+                }
+
+                return Results.Ok(new UpsertResponse
+                {
+                    DocumentId = docId,
+                    Index = upsert.Index
+                });
+            })
+        .AddEndpointFilter(authFilter)
+        .Produces<UpsertResponse>(StatusCodes.Status200OK)
+        .Produces<ProblemDetails>(StatusCodes.Status401Unauthorized)
+        .Produces<ProblemDetails>(StatusCodes.Status403Forbidden)
+        .Produces<ProblemDetails>(StatusCodes.Status404NotFound);
+
+
+
     // Document status endpoint
     app.MapGet(Constants.HttpUploadStatusEndpoint,
             async Task<IResult> (

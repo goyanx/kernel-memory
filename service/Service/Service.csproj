@@ -43,6 +43,7 @@
 <!--        <ProjectReference Include="..\..\extensions\RabbitMQ\RabbitMQ.csproj"/>-->
 <!--    </ItemGroup>-->
 
+
     <!-- Code Analysis -->
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4">

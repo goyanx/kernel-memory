@@ -49,6 +49,8 @@ public static class Constants
     public const string ReservedPayloadVectorGeneratorField = "vector_generator";
 
     // Endpoints
+    public const string HttpUpsertEndpoint = "/upsert";
+
     public const string HttpAskEndpoint = "/ask";
     public const string HttpSearchEndpoint = "/search";
     public const string HttpUploadEndpoint = "/upload";
