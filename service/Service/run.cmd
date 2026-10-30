@@ -2,4 +2,6 @@
 
 dotnet restore
 dotnet build
-cmd /C "set ASPNETCORE_ENVIRONMENT=Development && dotnet run"
+set "ASPNETCORE_ENVIRONMENT=Development"
+set "DOTNET_ROLL_FORWARD=Major"
+dotnet run --no-build --no-launch-profile

@@ -85,9 +85,12 @@ if (config.Service.RunWebService)
 
 // Inject memory client and its dependencies
 // Note: pass the current service collection to the builder, in order to start the pipeline handlers
+var ollamaConfig = appBuilder.Configuration.GetSection("KernelMemory:Services:Ollama").Get<OllamaLocalConfig>()
+                   ?? new OllamaLocalConfig();
 IKernelMemory memory = new KernelMemoryBuilder(appBuilder.Services)
+    .WithCustomEmbeddingGenerator(new OllamaEmbeddingGenerator(ollamaConfig))
+    .WithCustomTextGenerator(new OllamaTextGenerator(ollamaConfig))
     .FromAppSettings()
-    // .With...() // in case you need to set something not already defined by `.FromAppSettings()`
     .Build();
 
 appBuilder.Services.AddSingleton(memory);
@@ -272,7 +275,7 @@ if (config.Service.RunWebService)
                 log.LogTrace("New search request");
                 MemoryAnswer answer = await service.AskAsync(
                         question: query.Question,
-                        index: query.Index,
+                        index: LocalIndex(query.Index),
                         filters: query.Filters,
                         minRelevance: query.MinRelevance,
                         cancellationToken: cancellationToken)
@@ -295,7 +298,7 @@ if (config.Service.RunWebService)
                 log.LogTrace("New search HTTP request");
                 SearchResult answer = await service.SearchAsync(
                         query: query.Query,
-                        index: query.Index,
+                        index: LocalIndex(query.Index),
                         filters: query.Filters,
                         minRelevance: query.MinRelevance,
                         limit: query.Limit,
@@ -319,7 +322,7 @@ if (config.Service.RunWebService)
                 log.LogTrace("New upsert request");
                 string docId = await service.ImportTextAsync(text: upsert.Text,
                     documentId: upsert.DocumentId,
-                    index: upsert.Index,
+                    index: LocalIndex(upsert.Index),
                     tags: upsert.Tags,
                     cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -398,6 +401,12 @@ app.Logger.LogInformation(
     config.Service.RunHandlers);
 
 app.Run();
+
+static string LocalIndex(string? index)
+{
+    string name = string.IsNullOrWhiteSpace(index) ? "default" : index;
+    return name.EndsWith("_local", StringComparison.OrdinalIgnoreCase) ? name : name + "_local";
+}
 
 void CheckConfiguration()
 {
